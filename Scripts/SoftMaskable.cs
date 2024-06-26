@@ -104,6 +104,10 @@ namespace Coffee.UISoftMask
 
         public Material modifiedMaterial { get; private set; }
 
+        private int prevSMBufferW = 0;
+        private int prevSMBufferH = 0;
+        
+
         /// <summary>
         /// Perform material modification in this function.
         /// </summary>
@@ -122,6 +126,20 @@ namespace Coffee.UISoftMask
                 _effectMaterialHash = k_InvalidHash;
                 return baseMaterial;
             }
+            
+            //====新增开始 检查softMaskBuffer是否宽高变化了(宽高变化会导致softMaskBuffer会被置空, 导致之前设置的材质_SoftMaskTex为空)====
+            if ((prevSMBufferW == 0 && prevSMBufferH == 0) || prevSMBufferW != softMask.softMaskBuffer.width || prevSMBufferH != softMask.softMaskBuffer.height)
+            {
+                prevSMBufferW = softMask.softMaskBuffer.width;
+                prevSMBufferH = softMask.softMaskBuffer.height;
+
+                if (_effectMaterialHash.isValid)
+                {
+                    MaterialCache.Unregister(_effectMaterialHash);
+                    _effectMaterialHash = k_InvalidHash;
+                }
+            }
+            //====新增结束 ====
 
             // Generate soft maskable material.
             var previousHash = _effectMaterialHash;
@@ -269,6 +287,9 @@ namespace Coffee.UISoftMask
 
             MaterialCache.Unregister(_effectMaterialHash);
             _effectMaterialHash = k_InvalidHash;
+
+            prevSMBufferW = 0;
+            prevSMBufferH = 0;
         }
 
 #if UNITY_EDITOR
